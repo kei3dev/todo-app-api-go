@@ -1,0 +1,13 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+bin = "tmp/main"
+cmd = "go build -o tmp/main ./cmd/server"
+exclude_dir = ["vendor", "tmp", "migrations"]
+exclude_file = ["*.md"]
+
+[runner]
+cmd = "tmp/main"
+watch_dir = ["internal", "cmd"]
+ignore = ["tmp", "vendor"]
