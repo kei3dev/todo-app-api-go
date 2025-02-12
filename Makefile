@@ -34,6 +34,9 @@ test:
 tidy:
 	docker compose exec api go mod tidy
 
+mysql:
+	docker compose exec db mysql -uuser -ppassword
+
 migrate-up:
 	docker compose exec api migrate -path ./migrations -database "$(DATABASE_URL)" up
 
