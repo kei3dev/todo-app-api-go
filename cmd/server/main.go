@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
+	"github.com/kei3dev/todo-app-api-go/pkg/db"
 )
 
 func main() {
@@ -15,12 +16,12 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	// db.InitDB()
+	db.InitDB()
 
 	r := chi.NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Todo App API is running!"))
+		w.Write([]byte("Todo App API is running!!!\n"))
 	})
 
 	port := "8080"
