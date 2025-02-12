@@ -17,28 +17,32 @@ logs:
 	docker compose logs -f
 
 build:
-	go build -o main ./cmd/server
+	docker compose exec api go build -o main ./cmd/server
 
 run:
-	go run ./cmd/server/main.go
+	docker compose exec api go run ./cmd/server/main.go
 
 fmt:
-	go fmt ./...
+	docker compose exec api go fmt ./...
 
 lint:
-	golangci-lint run
+	docker compose exec api golangci-lint run
 
 test:
-	go test ./...
+	docker compose exec api go test ./...
+
+tidy:
+	docker compose exec api go mod tidy
 
 migrate-up:
-	migrate -path ./migrations -database "$(DATABASE_URL)" up
+	docker compose exec api migrate -path ./migrations -database "$(DATABASE_URL)" up
 
 migrate-down:
-	migrate -path ./migrations -database "$(DATABASE_URL)" down
+	docker compose exec api migrate -path ./migrations -database "$(DATABASE_URL)" down
 
 migrate-create:
-	migrate create -ext sql -dir ./migrations -seq $(name)
+	docker compose exec api migrate create -ext sql -dir ./migrations -seq $(name)
 
 redis-clear:
-	docker exec -it redis_cache redis-cli FLUSHALL
+	docker compose exec redis redis-cli FLUSHALL
+
