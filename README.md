@@ -15,32 +15,58 @@ This is a simple Todo App API using Go.
 - user authentication
 - CRUD operations for todos
 
-## setup
+## project structure
+
+Directory structure based on Clean Architecture principles
+
+```
+todo-app-api-go/
+├── cmd/
+│   ├── server/
+│   │   ├── main.go
+├── config/
+│   ├── config.go
+├── internal/
+│   ├── domain/
+│   ├── usecase/
+│   ├── repository/
+│   ├── handler/
+├── pkg/
+│   ├── db/
+│   │   ├── mysql.go
+│   ├── middleware/
+│   │   ├── auth.go
+├── migrations/
+│   ├── 000001_create_users_table.down.sql
+│   ├── 000001_create_users_table.up.sql
+│   ├── 000002_create_todos_table.down.sql
+│   ├── 000002_create_todos_table.up.sql
+├── .env
+├── .gitignore
+├── .air.toml
+├── Dockerfile
+├── Makefile
+├── compose.yml
+├── go.mod
+├── go.sum
+```
+
+## Get started
+
+### setup
 
 ```bash
 make up
 ```
 
-## stop
+### stop
 
 ```bash
 make stop
 ```
 
-## delete
+### delete
 
 ```bash
 make down
-```
-
-## restart
-
-```bash
-make restart
-```
-
-## logs
-
-```bash
-make logs
 ```
