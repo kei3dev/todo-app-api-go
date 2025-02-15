@@ -10,14 +10,14 @@ down:
 stop:
 	docker compose stop
 
+build:
+	docker compose build
+
 restart:
-	docker compose down --remove-orphans && docker compose up -d
+	docker compose down --remove-orphans && docker compose up --build
 
 logs:
 	docker compose logs -f
-
-build:
-	docker compose exec api go build -o main ./cmd/server
 
 run:
 	docker compose exec api go run ./cmd/server/main.go
