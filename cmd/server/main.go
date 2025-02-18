@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
@@ -17,6 +18,9 @@ func main() {
 	}
 
 	db.InitDB()
+	if os.Getenv("APP_ENV") == "development" {
+		db.MigrateDB()
+	}
 
 	r := chi.NewRouter()
 
