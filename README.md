@@ -27,7 +27,7 @@ todo-app-api-go/
 ├── config/
 │   ├── config.go
 ├── internal/
-│   ├── domain/
+│   ├── entity/
 │   ├── usecase/
 │   ├── repository/
 │   ├── handler/
