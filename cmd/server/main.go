@@ -8,6 +8,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
+	"github.com/kei3dev/todo-app-api-go/internal/handler"
+	"github.com/kei3dev/todo-app-api-go/internal/repository"
+	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 	"github.com/kei3dev/todo-app-api-go/pkg/db"
 )
 
@@ -22,11 +25,22 @@ func main() {
 		db.MigrateDB()
 	}
 
+	userRepo := repository.NewUserRepository()
+	todoRepo := repository.NewTodoRepository()
+
+	userUsecase := usecase.NewUserUsecase(userRepo)
+	todoUsecase := usecase.NewTodoUsecase(todoRepo)
+
+	userHandler := handler.NewUserHandler(userUsecase)
+	todoHandler := handler.NewTodoHandler(todoUsecase)
+
 	r := chi.NewRouter()
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Todo App API is running!!!\n"))
-	})
+	r.Post("/users", userHandler.RegisterUser)
+	r.Get("/users/{id}", userHandler.GetUserByID)
+
+	r.Post("/todos", todoHandler.CreateTodo)
+	r.Get("/todos/{id}", todoHandler.GetTodoByID)
 
 	port := "8080"
 	fmt.Printf("Server running on port %s\n", port)
