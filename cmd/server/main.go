@@ -12,6 +12,7 @@ import (
 	"github.com/kei3dev/todo-app-api-go/internal/repository"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 	"github.com/kei3dev/todo-app-api-go/pkg/db"
+	"github.com/kei3dev/todo-app-api-go/pkg/middleware"
 )
 
 func main() {
@@ -33,14 +34,19 @@ func main() {
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	todoHandler := handler.NewTodoHandler(todoUsecase)
+	authHandler := handler.NewAuthHandler(userUsecase)
 
 	r := chi.NewRouter()
 
 	r.Post("/users", userHandler.RegisterUser)
-	r.Get("/users/{id}", userHandler.GetUserByID)
 
 	r.Post("/todos", todoHandler.CreateTodo)
 	r.Get("/todos/{id}", todoHandler.GetTodoByID)
+	r.Post("/login", authHandler.Login)
+
+	r.With(middleware.ValidateJWT).Get("/protected", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Protected content!"))
+	})
 
 	port := "8080"
 	fmt.Printf("Server running on port %s\n", port)
