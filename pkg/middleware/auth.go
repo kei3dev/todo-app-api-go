@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
 )
+
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
 
 var jwtSecret []byte
 
@@ -54,7 +59,20 @@ func ValidateJWT(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			return
+		}
+
+		userID, ok := claims["id"].(float64)
+		if !ok {
+			http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDKey, uint(userID))
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
