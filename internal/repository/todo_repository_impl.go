@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
 	"github.com/kei3dev/todo-app-api-go/pkg/db"
 
@@ -38,7 +40,12 @@ func (r *todoRepositoryImpl) FindAllByUserID(userID uint) ([]entity.Todo, error)
 }
 
 func (r *todoRepositoryImpl) Update(todo *entity.Todo) error {
-	return r.db.Save(todo).Error
+	return r.db.Model(todo).
+		Updates(map[string]interface{}{
+			"title":      todo.Title,
+			"completed":  todo.Completed,
+			"updated_at": time.Now(),
+		}).Error
 }
 
 func (r *todoRepositoryImpl) Delete(id uint) error {
