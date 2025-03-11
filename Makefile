@@ -60,8 +60,3 @@ migrate-down:
 .PHONY: migrate-create
 migrate-create:
 	docker compose exec api migrate create -ext sql -dir ./migrations -seq $(name)
-
-.PHONY: redis-clear
-redis-clear:
-	docker compose exec redis redis-cli FLUSHALL
-

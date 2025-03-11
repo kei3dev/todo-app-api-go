@@ -6,7 +6,6 @@ This is a simple Todo App API using Go.
 
 - Go
 - MySQL
-- Redis
 - Chi
 - Gorm
 
