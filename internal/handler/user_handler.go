@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/kei3dev/todo-app-api-go/internal/entity"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -29,24 +27,23 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
-		return
+	userDTO := &usecase.UserDTO{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
 	}
 
-	user := &entity.User{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: string(hashedPassword),
-	}
-
-	err = h.UserUsecase.RegisterUser(user)
+	err := h.UserUsecase.RegisterUser(userDTO)
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
+	responseUser := map[string]interface{}{
+		"name":  req.Name,
+		"email": req.Email,
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(responseUser)
 }
