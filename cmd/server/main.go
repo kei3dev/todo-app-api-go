@@ -39,13 +39,21 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Post("/users", userHandler.RegisterUser)
-
-	r.Post("/todos", todoHandler.CreateTodo)
-	r.Get("/todos/{id}", todoHandler.GetTodoByID)
 	r.Post("/login", authHandler.Login)
 
-	r.With(middleware.ValidateJWT).Get("/protected", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Protected content!"))
+	// 認証が必要なエンドポイント
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.ValidateJWT)
+
+		r.Post("/todos", todoHandler.CreateTodo)
+		r.Get("/todos/{id}", todoHandler.GetTodoByID)
+		r.Get("/todos", todoHandler.GetAllTodos)
+		r.Put("/todos/{id}", todoHandler.UpdateTodo)
+		r.Delete("/todos/{id}", todoHandler.DeleteTodo)
+
+		r.Get("/protected", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Protected content!"))
+		})
 	})
 
 	port := "8080"
