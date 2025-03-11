@@ -6,7 +6,6 @@ import (
 
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 	"github.com/kei3dev/todo-app-api-go/pkg/middleware"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandler struct {
@@ -28,14 +27,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserUsecase.GetUserByEmail(req.Email)
+	user, err := h.UserUsecase.VerifyPassword(req.Email, req.Password)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
 		return
 	}
 
