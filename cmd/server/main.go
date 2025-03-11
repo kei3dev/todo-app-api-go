@@ -41,7 +41,6 @@ func main() {
 	r.Post("/users", userHandler.RegisterUser)
 	r.Post("/login", authHandler.Login)
 
-	// 認証が必要なエンドポイント
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.ValidateJWT)
 
