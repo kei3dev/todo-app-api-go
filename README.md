@@ -14,6 +14,10 @@ This is a simple Todo App API using Go.
 - user authentication
 - CRUD operations for todos
 
+## Documentation
+
+For detailed documentation and usage instructions, please refer to [Wiki](https://github.com/kei3dev/todo-app-api-go/wiki)
+
 ## project structure
 
 Directory structure based on Clean Architecture principles
