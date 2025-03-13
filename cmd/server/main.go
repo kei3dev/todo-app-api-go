@@ -49,10 +49,6 @@ func main() {
 		r.Get("/todos", todoHandler.GetAllTodos)
 		r.Put("/todos/{id}", todoHandler.UpdateTodo)
 		r.Delete("/todos/{id}", todoHandler.DeleteTodo)
-
-		r.Get("/protected", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Protected content!"))
-		})
 	})
 
 	port := "8080"
