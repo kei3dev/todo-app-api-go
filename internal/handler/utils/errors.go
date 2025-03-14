@@ -19,4 +19,11 @@ var (
 
 	ErrAuthenticationFailed  = errors.New("Authentication failed")
 	ErrTokenGenerationFailed = errors.New("Failed to generate token")
+
+	ErrEmptyTitle       = errors.New("Title cannot be empty")
+	ErrEmptyEmail       = errors.New("Email cannot be empty")
+	ErrInvalidEmail     = errors.New("Invalid email format")
+	ErrEmptyPassword    = errors.New("Password cannot be empty")
+	ErrPasswordTooShort = errors.New("Password must be at least 6 characters")
+	ErrEmptyName        = errors.New("Name cannot be empty")
 )
