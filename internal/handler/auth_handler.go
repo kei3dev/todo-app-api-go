@@ -27,6 +27,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := utils.ValidateLogin(req.Email, req.Password); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
 	user, err := h.UserUsecase.VerifyPassword(req.Email, req.Password)
 	if err != nil {
 		utils.RespondWithError(w, utils.ErrAuthenticationFailed, http.StatusUnauthorized)

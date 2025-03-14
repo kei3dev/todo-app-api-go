@@ -42,6 +42,11 @@ func (h *TodoHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := utils.ValidateTodo(&todo); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
 	todo.UserID = userID
 
 	if err := h.TodoUsecase.CreateTodo(&todo); err != nil {
@@ -109,6 +114,11 @@ func (h *TodoHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 
 	var updatedTodo entity.Todo
 	if err := utils.DecodeRequestBody(r, &updatedTodo); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	if err := utils.ValidateTodo(&updatedTodo); err != nil {
 		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}

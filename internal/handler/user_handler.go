@@ -27,6 +27,11 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := utils.ValidateUserRegistration(req.Name, req.Email, req.Password); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
 	userDTO := &usecase.UserDTO{
 		Name:     req.Name,
 		Email:    req.Email,
