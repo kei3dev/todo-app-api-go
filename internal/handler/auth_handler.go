@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
+	"github.com/kei3dev/todo-app-api-go/internal/handler/utils"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 	"github.com/kei3dev/todo-app-api-go/pkg/middleware"
 )
@@ -22,22 +22,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := utils.DecodeRequestBody(r, &req); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	user, err := h.UserUsecase.VerifyPassword(req.Email, req.Password)
 	if err != nil {
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		utils.RespondWithError(w, utils.ErrAuthenticationFailed, http.StatusUnauthorized)
 		return
 	}
 
 	token, err := middleware.GenerateJWT(user)
 	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		utils.RespondWithError(w, utils.ErrTokenGenerationFailed, http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	utils.RespondWithJSON(w, map[string]string{"token": token}, http.StatusOK)
 }

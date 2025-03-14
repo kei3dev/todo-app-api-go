@@ -1,14 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
+	"github.com/kei3dev/todo-app-api-go/internal/handler/utils"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
-	"github.com/kei3dev/todo-app-api-go/pkg/middleware"
 )
 
 type TodoHandler struct {
@@ -19,134 +16,140 @@ func NewTodoHandler(todoUsecase usecase.TodoUsecase) *TodoHandler {
 	return &TodoHandler{TodoUsecase: todoUsecase}
 }
 
+func (h *TodoHandler) checkTodoOwnership(todoID uint, userID uint) (*entity.Todo, error) {
+	todo, err := h.TodoUsecase.GetTodoByID(todoID)
+	if err != nil {
+		return nil, utils.ErrTodoNotFound
+	}
+
+	if todo.UserID != userID {
+		return nil, utils.ErrUnauthorized
+	}
+
+	return todo, nil
+}
+
 func (h *TodoHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(uint)
-	if !ok {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+	userID, err := utils.GetUserIDFromContext(r)
+	if err != nil {
+		utils.RespondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	var todo entity.Todo
-	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := utils.DecodeRequestBody(r, &todo); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	todo.UserID = userID
 
-	err := h.TodoUsecase.CreateTodo(&todo)
-	if err != nil {
-		http.Error(w, "Failed to create todo", http.StatusInternalServerError)
+	if err := h.TodoUsecase.CreateTodo(&todo); err != nil {
+		utils.RespondWithError(w, utils.ErrCreateTodoFailed, http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(todo)
+	utils.RespondWithJSON(w, todo, http.StatusCreated)
 }
 
 func (h *TodoHandler) GetTodoByID(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idParam)
+	todoID, err := utils.GetIDFromURL(r, "id")
 	if err != nil {
-		http.Error(w, "Invalid todo ID", http.StatusBadRequest)
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	todo, err := h.TodoUsecase.GetTodoByID(uint(id))
+	todo, err := h.TodoUsecase.GetTodoByID(todoID)
 	if err != nil {
-		http.Error(w, "Todo not found", http.StatusNotFound)
+		utils.RespondWithError(w, utils.ErrTodoNotFound, http.StatusNotFound)
 		return
 	}
 
-	json.NewEncoder(w).Encode(todo)
+	utils.RespondWithJSON(w, todo, http.StatusOK)
 }
 
 func (h *TodoHandler) GetAllTodos(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(uint)
-	if !ok {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+	userID, err := utils.GetUserIDFromContext(r)
+	if err != nil {
+		utils.RespondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	todos, err := h.TodoUsecase.GetTodosByUserID(userID)
 	if err != nil {
-		http.Error(w, "Failed to get todos", http.StatusInternalServerError)
+		utils.RespondWithError(w, utils.ErrGetTodosFailed, http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(todos)
+	utils.RespondWithJSON(w, todos, http.StatusOK)
 }
 
 func (h *TodoHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(uint)
-	if !ok {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
-		return
-	}
-
-	idParam := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idParam)
+	userID, err := utils.GetUserIDFromContext(r)
 	if err != nil {
-		http.Error(w, "Invalid todo ID", http.StatusBadRequest)
+		utils.RespondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	existingTodo, err := h.TodoUsecase.GetTodoByID(uint(id))
+	todoID, err := utils.GetIDFromURL(r, "id")
 	if err != nil {
-		http.Error(w, "Todo not found", http.StatusNotFound)
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	if existingTodo.UserID != userID {
-		http.Error(w, "Unauthorized to update this todo", http.StatusForbidden)
+	existingTodo, err := h.checkTodoOwnership(todoID, userID)
+	if err != nil {
+		statusCode := http.StatusNotFound
+		if err == utils.ErrUnauthorized {
+			statusCode = http.StatusForbidden
+		}
+		utils.RespondWithError(w, err, statusCode)
 		return
 	}
 
 	var updatedTodo entity.Todo
-	if err := json.NewDecoder(r.Body).Decode(&updatedTodo); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := utils.DecodeRequestBody(r, &updatedTodo); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	updatedTodo.ID = uint(id)
+	updatedTodo.ID = todoID
 	updatedTodo.UserID = userID
 	updatedTodo.CreatedAt = existingTodo.CreatedAt
 
 	if err := h.TodoUsecase.UpdateTodo(&updatedTodo); err != nil {
-		http.Error(w, "Failed to update todo", http.StatusInternalServerError)
+		utils.RespondWithError(w, utils.ErrUpdateTodoFailed, http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(updatedTodo)
+	utils.RespondWithJSON(w, updatedTodo, http.StatusOK)
 }
 
 func (h *TodoHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(uint)
-	if !ok {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
-		return
-	}
-
-	idParam := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idParam)
+	userID, err := utils.GetUserIDFromContext(r)
 	if err != nil {
-		http.Error(w, "Invalid todo ID", http.StatusBadRequest)
+		utils.RespondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	existingTodo, err := h.TodoUsecase.GetTodoByID(uint(id))
+	todoID, err := utils.GetIDFromURL(r, "id")
 	if err != nil {
-		http.Error(w, "Todo not found", http.StatusNotFound)
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	if existingTodo.UserID != userID {
-		http.Error(w, "Unauthorized to delete this todo", http.StatusForbidden)
+	_, err = h.checkTodoOwnership(todoID, userID)
+	if err != nil {
+		statusCode := http.StatusNotFound
+		if err == utils.ErrUnauthorized {
+			statusCode = http.StatusForbidden
+		}
+		utils.RespondWithError(w, err, statusCode)
 		return
 	}
 
-	if err := h.TodoUsecase.DeleteTodo(uint(id)); err != nil {
-		http.Error(w, "Failed to delete todo", http.StatusInternalServerError)
+	if err := h.TodoUsecase.DeleteTodo(todoID); err != nil {
+		utils.RespondWithError(w, utils.ErrDeleteTodoFailed, http.StatusInternalServerError)
 		return
 	}
 

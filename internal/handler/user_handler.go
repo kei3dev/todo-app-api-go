@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
+	"github.com/kei3dev/todo-app-api-go/internal/handler/utils"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 )
 
@@ -22,8 +22,8 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := utils.DecodeRequestBody(r, &req); err != nil {
+		utils.RespondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.UserUsecase.RegisterUser(userDTO)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		utils.RespondWithError(w, utils.ErrRegisterUserFailed, http.StatusInternalServerError)
 		return
 	}
 
@@ -44,6 +44,5 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		"email": req.Email,
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(responseUser)
+	utils.RespondWithJSON(w, responseUser, http.StatusCreated)
 }
