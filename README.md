@@ -27,8 +27,6 @@ todo-app-api-go/
 ├── cmd/
 │   ├── server/
 │   │   ├── main.go
-├── config/
-│   ├── config.go
 ├── internal/
 │   ├── entity/
 │   ├── usecase/
@@ -37,6 +35,7 @@ todo-app-api-go/
 ├── pkg/
 │   ├── db/
 │   │   ├── mysql.go
+│   │   ├── migration.go
 │   ├── middleware/
 │   │   ├── auth.go
 ├── migrations/
