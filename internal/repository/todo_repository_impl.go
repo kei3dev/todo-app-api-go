@@ -1,29 +1,27 @@
 package repository
 
 import (
-	"time"
-
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
 	"github.com/kei3dev/todo-app-api-go/pkg/db"
-
-	"gorm.io/gorm"
 )
 
 type todoRepositoryImpl struct {
-	db *gorm.DB
+	BaseRepository
 }
 
 func NewTodoRepository() TodoRepository {
-	return &todoRepositoryImpl{db: db.DB}
+	return &todoRepositoryImpl{
+		BaseRepository: NewBaseRepository(db.DB),
+	}
 }
 
 func (r *todoRepositoryImpl) Create(todo *entity.Todo) error {
-	return r.db.Create(todo).Error
+	return r.DB.Create(todo).Error
 }
 
 func (r *todoRepositoryImpl) FindByID(id uint) (*entity.Todo, error) {
 	var todo entity.Todo
-	err := r.db.First(&todo, id).Error
+	err := r.DB.First(&todo, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +30,7 @@ func (r *todoRepositoryImpl) FindByID(id uint) (*entity.Todo, error) {
 
 func (r *todoRepositoryImpl) FindAllByUserID(userID uint) ([]entity.Todo, error) {
 	var todos []entity.Todo
-	err := r.db.Where("user_id = ?", userID).Find(&todos).Error
+	err := r.DB.Where("user_id = ?", userID).Find(&todos).Error
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +38,12 @@ func (r *todoRepositoryImpl) FindAllByUserID(userID uint) ([]entity.Todo, error)
 }
 
 func (r *todoRepositoryImpl) Update(todo *entity.Todo) error {
-	return r.db.Model(todo).
-		Updates(map[string]interface{}{
-			"title":      todo.Title,
-			"completed":  todo.Completed,
-			"updated_at": time.Now(),
-		}).Error
+	return r.DB.Model(todo).Updates(map[string]interface{}{
+		"title":     todo.Title,
+		"completed": todo.Completed,
+	}).Error
 }
 
 func (r *todoRepositoryImpl) Delete(id uint) error {
-	return r.db.Delete(&entity.Todo{}, id).Error
+	return r.DB.Delete(&entity.Todo{}, id).Error
 }
