@@ -38,7 +38,7 @@ func (r *todoRepositoryImpl) FindAllByUserID(userID uint) ([]entity.Todo, error)
 }
 
 func (r *todoRepositoryImpl) Update(todo *entity.Todo) error {
-	return r.DB.Model(todo).Updates(map[string]interface{}{
+	return r.DB.Model(todo).Updates(map[string]any{
 		"title":     todo.Title,
 		"completed": todo.Completed,
 	}).Error
