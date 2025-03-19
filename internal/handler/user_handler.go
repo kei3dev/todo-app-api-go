@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/kei3dev/todo-app-api-go/internal/errors"
 	"github.com/kei3dev/todo-app-api-go/internal/handler/utils"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 )
@@ -40,7 +41,27 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.UserUsecase.RegisterUser(userDTO)
 	if err != nil {
-		utils.RespondWithError(w, utils.ErrRegisterUserFailed, http.StatusInternalServerError)
+		statusCode := http.StatusInternalServerError
+		var handlerErr error
+
+		switch err {
+		case errors.ErrEmailAlreadyExists:
+			statusCode = http.StatusConflict
+			handlerErr = errors.ErrEmailAlreadyExists
+		case errors.ErrInvalidEmailFormat:
+			statusCode = http.StatusBadRequest
+			handlerErr = errors.ErrInvalidEmailFormat
+		case errors.ErrPasswordTooShort:
+			statusCode = http.StatusBadRequest
+			handlerErr = errors.ErrPasswordTooShort
+		case errors.ErrNameTooShort:
+			statusCode = http.StatusBadRequest
+			handlerErr = errors.ErrNameTooShort
+		default:
+			handlerErr = errors.ErrRegisterUserFailed
+		}
+
+		utils.RespondWithError(w, handlerErr, statusCode)
 		return
 	}
 
