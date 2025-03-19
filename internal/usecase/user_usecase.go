@@ -1,9 +1,11 @@
 package usecase
 
 import (
-	"errors"
+	"fmt"
+	"regexp"
 
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
+	"github.com/kei3dev/todo-app-api-go/internal/errors"
 	"github.com/kei3dev/todo-app-api-go/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,9 +32,18 @@ func NewUserUsecase(userRepo repository.UserRepository) UserUsecase {
 }
 
 func (u *userUsecaseImpl) RegisterUser(dto *UserDTO) error {
+	if err := validateUserDTO(dto); err != nil {
+		return err
+	}
+
+	existingUser, err := u.userRepo.FindByEmail(dto.Email)
+	if err == nil && existingUser != nil {
+		return errors.ErrEmailAlreadyExists
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	user := &entity.User{
@@ -59,8 +70,25 @@ func (u *userUsecaseImpl) VerifyPassword(email, password string) (*entity.User, 
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.ErrInvalidCredentials
 	}
 
 	return user, nil
+}
+
+func validateUserDTO(dto *UserDTO) error {
+	if len(dto.Name) < 2 {
+		return errors.ErrNameTooShort
+	}
+
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(dto.Email) {
+		return errors.ErrInvalidEmailFormat
+	}
+
+	if len(dto.Password) < 8 {
+		return errors.ErrPasswordTooShort
+	}
+
+	return nil
 }
