@@ -4,18 +4,19 @@ import (
 	"strings"
 
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
+	"github.com/kei3dev/todo-app-api-go/internal/errors"
 )
 
 func ValidateTodo(todo *entity.Todo) error {
 	if strings.TrimSpace(todo.Title) == "" {
-		return ErrEmptyTitle
+		return errors.ErrEmptyTitle
 	}
 	return nil
 }
 
 func ValidateUserRegistration(name, email, password string) error {
 	if strings.TrimSpace(name) == "" {
-		return ErrEmptyName
+		return errors.ErrEmptyName
 	}
 
 	if err := ValidateEmail(email); err != nil {
@@ -35,7 +36,7 @@ func ValidateLogin(email, password string) error {
 	}
 
 	if strings.TrimSpace(password) == "" {
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	}
 
 	return nil
@@ -43,11 +44,11 @@ func ValidateLogin(email, password string) error {
 
 func ValidateEmail(email string) error {
 	if strings.TrimSpace(email) == "" {
-		return ErrEmptyEmail
+		return errors.ErrEmptyEmail
 	}
 
 	if !strings.Contains(email, "@") {
-		return ErrInvalidEmail
+		return errors.ErrInvalidEmailFormat
 	}
 
 	return nil
@@ -55,11 +56,11 @@ func ValidateEmail(email string) error {
 
 func ValidatePassword(password string) error {
 	if strings.TrimSpace(password) == "" {
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	}
 
 	if len(password) < 6 {
-		return ErrPasswordTooShort
+		return errors.ErrPasswordTooShort
 	}
 
 	return nil

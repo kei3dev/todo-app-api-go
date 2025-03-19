@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
+	"github.com/kei3dev/todo-app-api-go/internal/errors"
 	"github.com/kei3dev/todo-app-api-go/internal/handler/utils"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 )
@@ -19,11 +20,11 @@ func NewTodoHandler(todoUsecase usecase.TodoUsecase) *TodoHandler {
 func (h *TodoHandler) checkTodoOwnership(todoID uint, userID uint) (*entity.Todo, error) {
 	todo, err := h.TodoUsecase.GetTodoByID(todoID)
 	if err != nil {
-		return nil, utils.ErrTodoNotFound
+		return nil, errors.ErrTodoNotFound
 	}
 
 	if todo.UserID != userID {
-		return nil, utils.ErrUnauthorized
+		return nil, errors.ErrUnauthorized
 	}
 
 	return todo, nil
@@ -50,7 +51,7 @@ func (h *TodoHandler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	todo.UserID = userID
 
 	if err := h.TodoUsecase.CreateTodo(&todo); err != nil {
-		utils.RespondWithError(w, utils.ErrCreateTodoFailed, http.StatusInternalServerError)
+		utils.RespondWithError(w, errors.ErrCreateTodoFailed, http.StatusInternalServerError)
 		return
 	}
 
@@ -66,7 +67,7 @@ func (h *TodoHandler) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 
 	todo, err := h.TodoUsecase.GetTodoByID(todoID)
 	if err != nil {
-		utils.RespondWithError(w, utils.ErrTodoNotFound, http.StatusNotFound)
+		utils.RespondWithError(w, errors.ErrTodoNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -82,7 +83,7 @@ func (h *TodoHandler) GetAllTodos(w http.ResponseWriter, r *http.Request) {
 
 	todos, err := h.TodoUsecase.GetTodosByUserID(userID)
 	if err != nil {
-		utils.RespondWithError(w, utils.ErrGetTodosFailed, http.StatusInternalServerError)
+		utils.RespondWithError(w, errors.ErrGetTodosFailed, http.StatusInternalServerError)
 		return
 	}
 
@@ -105,7 +106,7 @@ func (h *TodoHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	existingTodo, err := h.checkTodoOwnership(todoID, userID)
 	if err != nil {
 		statusCode := http.StatusNotFound
-		if err == utils.ErrUnauthorized {
+		if err == errors.ErrUnauthorized {
 			statusCode = http.StatusForbidden
 		}
 		utils.RespondWithError(w, err, statusCode)
@@ -128,7 +129,7 @@ func (h *TodoHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	updatedTodo.CreatedAt = existingTodo.CreatedAt
 
 	if err := h.TodoUsecase.UpdateTodo(&updatedTodo); err != nil {
-		utils.RespondWithError(w, utils.ErrUpdateTodoFailed, http.StatusInternalServerError)
+		utils.RespondWithError(w, errors.ErrUpdateTodoFailed, http.StatusInternalServerError)
 		return
 	}
 
@@ -151,7 +152,7 @@ func (h *TodoHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	_, err = h.checkTodoOwnership(todoID, userID)
 	if err != nil {
 		statusCode := http.StatusNotFound
-		if err == utils.ErrUnauthorized {
+		if err == errors.ErrUnauthorized {
 			statusCode = http.StatusForbidden
 		}
 		utils.RespondWithError(w, err, statusCode)
@@ -159,7 +160,7 @@ func (h *TodoHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.TodoUsecase.DeleteTodo(todoID); err != nil {
-		utils.RespondWithError(w, utils.ErrDeleteTodoFailed, http.StatusInternalServerError)
+		utils.RespondWithError(w, errors.ErrDeleteTodoFailed, http.StatusInternalServerError)
 		return
 	}
 

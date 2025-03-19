@@ -3,11 +3,13 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/kei3dev/todo-app-api-go/internal/errors"
 )
 
 func DecodeRequestBody(r *http.Request, v any) error {
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
-		return ErrInvalidRequestPayload
+		return errors.ErrInvalidRequestPayload
 	}
 	return nil
 }

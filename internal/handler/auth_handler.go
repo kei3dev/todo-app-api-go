@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/kei3dev/todo-app-api-go/internal/errors"
 	"github.com/kei3dev/todo-app-api-go/internal/handler/utils"
 	"github.com/kei3dev/todo-app-api-go/internal/usecase"
 	"github.com/kei3dev/todo-app-api-go/pkg/middleware"
@@ -34,13 +35,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.UserUsecase.VerifyPassword(req.Email, req.Password)
 	if err != nil {
-		utils.RespondWithError(w, utils.ErrAuthenticationFailed, http.StatusUnauthorized)
+		utils.RespondWithError(w, errors.ErrInvalidCredentials, http.StatusUnauthorized)
 		return
 	}
 
 	token, err := middleware.GenerateJWT(user)
 	if err != nil {
-		utils.RespondWithError(w, utils.ErrTokenGenerationFailed, http.StatusInternalServerError)
+		utils.RespondWithError(w, errors.ErrTokenGenerationFailed, http.StatusInternalServerError)
 		return
 	}
 
