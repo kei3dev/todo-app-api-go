@@ -32,6 +32,7 @@ todo-app-api-go/
 │   ├── usecase/
 │   ├── repository/
 │   ├── handler/
+│   ├── errors/
 ├── pkg/
 │   ├── db/
 │   │   ├── mysql.go
