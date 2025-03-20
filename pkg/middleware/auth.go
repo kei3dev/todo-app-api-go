@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 	"github.com/kei3dev/todo-app-api-go/internal/entity"
 )
 
@@ -17,28 +15,30 @@ type contextKey string
 
 const UserIDKey contextKey = "user_id"
 
-var jwtSecret []byte
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		panic("Error loading .env file")
-	}
-	jwtSecret = []byte(getEnv("JWT_SECRET", "default_secret"))
+type JWTConfig struct {
+	Secret     []byte
+	Expiration time.Duration
 }
 
-func GenerateJWT(user *entity.User) (string, error) {
+func NewJWTConfig(secret string, expiration time.Duration) *JWTConfig {
+	return &JWTConfig{
+		Secret:     []byte(secret),
+		Expiration: expiration,
+	}
+}
+
+func (c *JWTConfig) GenerateJWT(user *entity.User) (string, error) {
 	claims := jwt.MapClaims{
 		"id":    user.ID,
 		"email": user.Email,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+		"exp":   time.Now().Add(c.Expiration).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(c.Secret)
 }
 
-func ValidateJWT(next http.Handler) http.Handler {
+func (c *JWTConfig) ValidateJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -51,7 +51,7 @@ func ValidateJWT(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
-			return jwtSecret, nil
+			return c.Secret, nil
 		})
 
 		if err != nil || !token.Valid {
@@ -74,11 +74,4 @@ func ValidateJWT(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), UserIDKey, uint(userID))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
-
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
 }
