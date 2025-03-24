@@ -11,10 +11,14 @@ import (
 
 type AuthHandler struct {
 	UserUsecase usecase.UserUsecase
+	JWTConfig   *middleware.JWTConfig
 }
 
-func NewAuthHandler(userUsecase usecase.UserUsecase) *AuthHandler {
-	return &AuthHandler{UserUsecase: userUsecase}
+func NewAuthHandler(userUsecase usecase.UserUsecase, jwtConfig *middleware.JWTConfig) *AuthHandler {
+	return &AuthHandler{
+		UserUsecase: userUsecase,
+		JWTConfig:   jwtConfig,
+	}
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +43,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := middleware.GenerateJWT(user)
+	token, err := h.JWTConfig.GenerateJWT(user)
 	if err != nil {
 		utils.RespondWithError(w, errors.ErrTokenGenerationFailed, http.StatusInternalServerError)
 		return
