@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
@@ -21,10 +22,20 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	db.InitDB()
+	dbConfig := db.NewDBConfig()
+	_, err = db.InitDB(dbConfig)
+	if err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+
 	if os.Getenv("APP_ENV") == "development" {
 		db.MigrateDB()
 	}
+
+	jwtConfig := middleware.NewJWTConfig(
+		os.Getenv("JWT_SECRET"),
+		24*time.Hour,
+	)
 
 	userRepo := repository.NewUserRepository()
 	todoRepo := repository.NewTodoRepository()
@@ -34,7 +45,7 @@ func main() {
 
 	userHandler := handler.NewUserHandler(userUsecase)
 	todoHandler := handler.NewTodoHandler(todoUsecase)
-	authHandler := handler.NewAuthHandler(userUsecase)
+	authHandler := handler.NewAuthHandler(userUsecase, jwtConfig)
 
 	r := chi.NewRouter()
 
@@ -42,7 +53,7 @@ func main() {
 	r.Post("/login", authHandler.Login)
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.ValidateJWT)
+		r.Use(jwtConfig.ValidateJWT)
 
 		r.Post("/todos", todoHandler.CreateTodo)
 		r.Get("/todos/{id}", todoHandler.GetTodoByID)
