@@ -49,6 +49,8 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.CORS)
+
 	r.Post("/users", userHandler.RegisterUser)
 	r.Post("/login", authHandler.Login)
 
