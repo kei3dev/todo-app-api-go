@@ -1,6 +1,6 @@
 module github.com/kei3dev/todo-app-api-go
 
-go 1.23.6
+go 1.24.2
 
 require (
 	github.com/go-chi/chi/v5 v5.2.1
